@@ -1,0 +1,178 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Automated Data-Quality Checks — Interactive Impact Demo (1.13.5)</title>
+<style>
+ :root{--navy:#0d1b2a;--teal:#0e9488;--ink:#1f2a37;--muted:#5b6b7f;--line:#e6ecf3;
+       --good:#12855c;--goodbg:#e7f7ef;--bad:#c0392b;--badbg:#fdecea;--amber:#b8860b;}
+ *{box-sizing:border-box}
+ body{font-family:'Segoe UI',Arial,sans-serif;color:var(--ink);margin:0;background:#f4f7fb;font-size:15px;line-height:1.5}
+ .wrap{max-width:1080px;margin:0 auto;padding:26px 26px 44px}
+ .topbar{background:var(--navy);color:#fff;border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+ .topbar h1{font-size:1.18rem;margin:0}
+ .topbar .sub{color:#aab7c6;font-size:.85rem;margin-top:3px}
+ .badge{background:#8a6d00;color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.4px;padding:5px 11px;border-radius:20px;white-space:nowrap}
+ .intro{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:16px 0;font-size:.93rem;color:#33505c}
+ .intro b{color:var(--ink)}
+ .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:16px 0}
+ .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 15px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+ .kpi .lab{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+ .kpi .now{font-size:1.55rem;font-weight:800;margin:5px 0 1px;line-height:1.1}
+ .kpi .raw{font-size:.76rem;color:var(--muted)}
+ .kpi .delta{font-size:.78rem;font-weight:700;margin-top:3px}
+ .banner{border-radius:10px;padding:13px 18px;margin:14px 0;font-size:.96rem;font-weight:600}
+ .panel{display:grid;grid-template-columns:1.05fr 1fr;gap:18px;margin-top:8px}
+ @media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.panel{grid-template-columns:1fr}}
+ .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+ .card h2{font-size:1.02rem;color:var(--navy);margin:0 0 4px}
+ .card .hint{font-size:.82rem;color:var(--muted);margin:0 0 10px}
+ .controls{display:flex;gap:8px;margin:2px 0 12px}
+ .btn{border:1px solid var(--line);background:#f7f9fc;border-radius:7px;padding:6px 12px;font-size:.82rem;cursor:pointer;color:var(--ink)}
+ .btn:hover{background:#eef3fa}
+ .chk{display:flex;align-items:center;gap:10px;padding:8px 6px;border-top:1px solid var(--line)}
+ .chk:first-of-type{border-top:0}
+ .chk input{width:17px;height:17px;accent-color:var(--teal);cursor:pointer}
+ .chk .nm{flex:1;font-size:.9rem}
+ .chk .nm small{color:var(--muted);font-weight:400}
+ .chk .fl{font-size:.8rem;color:var(--bad);font-weight:700;min-width:74px;text-align:right}
+ .tier{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 2px;font-weight:700}
+ .bars .row{display:flex;align-items:center;gap:9px;margin:7px 0;font-size:.84rem}
+ .bars .bn{min-width:150px;color:var(--ink)}
+ .bars .track{flex:1;background:#f0f3f8;border-radius:5px;height:16px;overflow:hidden}
+ .bars .fill{height:100%;background:linear-gradient(90deg,#f0b429,#c0392b);border-radius:5px;transition:width .3s}
+ .bars .bv{min-width:64px;text-align:right;color:var(--muted)}
+ table{border-collapse:collapse;width:100%;font-size:.86rem;margin-top:4px}
+ th{background:var(--navy);color:#fff;text-align:left;padding:7px 10px}
+ td{border:1px solid var(--line);padding:7px 10px}
+ tr:nth-child(even) td{background:#f7f9fc}
+ .foot{margin-top:22px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+</style></head><body>
+<div class="wrap">
+
+ <div class="topbar">
+   <div>
+     <h1>Automated Data-Quality Checks — Interactive Impact Demo</h1>
+     <div class="sub">HEXA VPN · app_version 1.13.5 · flip the checks and watch the headline numbers move</div>
+   </div>
+   <span class="badge">SYNTHETIC DATA · DEMO</span>
+ </div>
+
+ <div class="intro">
+   Product dashboards report a headline <b>success rate</b> — but many "successes" aren't genuine: connections that
+   drop in seconds, land on a fallback route, hit corrupt records, or come from users who never return.
+   <b>Toggle the data-quality checks below</b> to reclassify those inflated successes and see how the true
+   picture changes. <b>Start:</b> all checks on (After DQ). Turn them all off to see the raw dashboard.
+   <em>All numbers are synthetic, for demonstration only.</em>
+ </div>
+
+ <div class="kpis" id="kpis"></div>
+ <div class="banner" id="banner"></div>
+
+ <div class="panel">
+   <div class="card">
+     <h2>Data-quality checks</h2>
+     <p class="hint">Each check reclassifies a set of fake successes to failures. Toggle any on or off.</p>
+     <div class="controls">
+       <button class="btn" onclick="setAll(true)">✓ After DQ (all on)</button>
+       <button class="btn" onclick="setAll(false)">Raw dashboard (all off)</button>
+     </div>
+     <div id="checklist"></div>
+   </div>
+   <div class="card">
+     <h2>Per-check contribution</h2>
+     <p class="hint">How much of the success drop each enabled check accounts for.</p>
+     <div class="bars" id="bars"></div>
+     <table style="margin-top:14px">
+       <tr><th>Users left with no clean success</th><th>Count</th></tr>
+       <tr><td>One-and-done (Type A · single session)</td><td id="uA">—</td></tr>
+       <tr><td>One-and-done (Type B · single day)</td><td id="uB">—</td></tr>
+       <tr><td>Retained (2+ days — worth acting on)</td><td id="uR">—</td></tr>
+       <tr><td><b>Total users lost</b></td><td id="uT"><b>—</b></td></tr>
+     </table>
+   </div>
+ </div>
+
+ <div class="foot">
+   <b>Method, not production data.</b> This is a static, synthetic illustration of an automated data-quality
+   framework (SELECT-only, version-scoped). Each check owns a distinct set of records, so their contributions add
+   up. No live database is connected and no real HEXA VPN figures are shown.
+ </div>
+</div>
+
+<script>
+// ---- synthetic model (app_version 1.13.5) ----
+const EVENTS = 400000;
+const RAW = { successes: 388000, success_pct: 97.00, users: 120000 };
+// id, name, tier, subtitle, flips (successes reclassified), users_lost, A, B, Ret
+const CHECKS = [
+  ["#15","Outbound switch occurred","Row-level","connected only on a fallback route",90000,11000,4200,2600,4200],
+  ["B5","Inactivity churn 7d","Behavioural","connected once, never returned",38000,20000,11000,5600,3400],
+  ["#9","Plausible session length","Row-level","session too short to be real",20000,5500,2600,1500,1400],
+  ["T1","Flap (success < 30s)","Journey","connected, then dropped in seconds",18000,3000,1500,700,800],
+  ["#1","Timestamp validity","Row-level","impossible / skewed timestamps",7000,2000,900,500,600],
+  ["B4","Very-churny countries","Behavioural","markets that never retain",2500,1200,700,300,200],
+  ["#14","Free-user 1+ day balance","Row-level","entitlement / metering anomaly",600,90,40,25,25],
+  ["#11","Self-replace bug (A1)","Row-level","replaced then reconnected < 60s",250,5,2,2,1],
+  ["#13","Future-dated timestamp","Row-level","event dated in the future",40,8,3,3,2],
+  ["#12","Session longer than 3 days","Row-level","implausibly long session",10,5,2,2,1],
+];
+const enabled = new Set(CHECKS.map(c=>c[0]));   // start: all on
+
+function fmt(n){return n.toLocaleString('en-US');}
+function compute(){
+  let flips=0,uL=0,uA=0,uB=0,uR=0;
+  for(const c of CHECKS){ if(enabled.has(c[0])){flips+=c[4];uL+=c[5];uA+=c[6];uB+=c[7];uR+=c[8];} }
+  const succ=RAW.successes-flips, spct=100*succ/EVENTS, fpct=100-spct;
+  return {flips,uL,uA,uB,uR,succ,fail:EVENTS-succ,spct,fpct,users:RAW.users-uL};
+}
+function kpiCard(lab,now,raw,good,delta,deltaGood){
+  const col=deltaGood?'var(--good)':'var(--bad)';
+  return `<div class="kpi"><div class="lab">${lab}</div><div class="now" style="color:${good?'var(--good)':'var(--ink)'}">${now}</div>
+    <div class="raw">raw: ${raw}</div><div class="delta" style="color:${col}">${delta}</div></div>`;
+}
+function render(){
+  const r=compute();
+  const on = enabled.size>0;
+  document.getElementById('kpis').innerHTML =
+    kpiCard('Success %', r.spct.toFixed(2)+'%', RAW.success_pct.toFixed(2)+'%', r.spct>=90, (r.spct-RAW.success_pct).toFixed(2)+' pts', false) +
+    kpiCard('Failure %', r.fpct.toFixed(2)+'%', (100-RAW.success_pct).toFixed(2)+'%', false, '+'+(r.fpct-(100-RAW.success_pct)).toFixed(2)+' pts', false) +
+    kpiCard('Successes', fmt(r.succ), fmt(RAW.successes), false, (r.succ-RAW.successes>0?'+':'')+fmt(r.succ-RAW.successes), false) +
+    kpiCard('Failures', fmt(r.fail), fmt(EVENTS-RAW.successes), false, '+'+fmt(r.fail-(EVENTS-RAW.successes)), false) +
+    kpiCard('Unique users', fmt(r.users), fmt(RAW.users), false, (r.users-RAW.users>0?'+':'')+fmt(r.users-RAW.users), false);
+  const b=document.getElementById('banner');
+  if(!on){ b.style.background='var(--goodbg)'; b.style.color='var(--good)';
+    b.innerHTML='<b>Raw dashboard view</b> — success '+RAW.success_pct.toFixed(2)+'%. No quality checks applied. Toggle checks on to see the true picture.'; }
+  else { b.style.background='var(--badbg)'; b.style.color='var(--bad)';
+    b.innerHTML='<b>After DQ checks</b> — true success <b>'+r.spct.toFixed(2)+'%</b> (down '+(RAW.success_pct-r.spct).toFixed(2)+
+      ' pts from the raw '+RAW.success_pct.toFixed(2)+'%). '+fmt(r.uL)+' users lost their only clean success.'; }
+  // bars (enabled checks, largest first)
+  const act=CHECKS.filter(c=>enabled.has(c[0])).sort((a,b)=>b[4]-a[4]);
+  const max=act.length?act[0][4]:1;
+  document.getElementById('bars').innerHTML = act.map(c=>
+    `<div class="row"><div class="bn">${c[0]} ${c[1]}</div><div class="track"><div class="fill" style="width:${Math.max(2,100*c[4]/max)}%"></div></div><div class="bv">${fmt(c[4])}</div></div>`
+  ).join('') || '<p class="hint">No checks enabled — this is the raw dashboard.</p>';
+  document.getElementById('uA').textContent=fmt(r.uA);
+  document.getElementById('uB').textContent=fmt(r.uB);
+  document.getElementById('uR').textContent=fmt(r.uR);
+  document.getElementById('uT').innerHTML='<b>'+fmt(r.uL)+'</b>';
+}
+function buildList(){
+  const tiers={};
+  CHECKS.forEach(c=>{(tiers[c[2]]=tiers[c[2]]||[]).push(c);});
+  let html='';
+  for(const t of ['Row-level','Behavioural','Journey']){
+    if(!tiers[t])continue;
+    html+='<div class="tier">'+t+'</div>';
+    for(const c of tiers[t]){
+      html+=`<label class="chk"><input type="checkbox" data-id="${c[0]}" checked onchange="toggle(this)">
+        <span class="nm"><b>${c[0]}</b> ${c[1]}<br><small>${c[3]}</small></span>
+        <span class="fl">−${fmt(c[4])}</span></label>`;
+    }
+  }
+  document.getElementById('checklist').innerHTML=html;
+}
+function toggle(el){ el.checked?enabled.add(el.dataset.id):enabled.delete(el.dataset.id); render(); }
+function setAll(on){ enabled.clear(); if(on)CHECKS.forEach(c=>enabled.add(c[0]));
+  document.querySelectorAll('#checklist input').forEach(i=>i.checked=on); render(); }
+buildList(); render();
+</script>
+</body></html>

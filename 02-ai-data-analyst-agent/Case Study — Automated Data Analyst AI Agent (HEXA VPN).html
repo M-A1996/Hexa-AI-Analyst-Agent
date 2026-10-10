@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>Case Study 2 — Automated Data Analyst AI Agent (HEXA VPN)</title>
+<style>
+ :root{--navy:#0d1b2a;--teal:#0e9488;--ink:#1f2a37;--muted:#5b6b7f;--line:#e6ecf3;}
+ *{box-sizing:border-box}
+ body{font-family:'Segoe UI',Arial,sans-serif;color:var(--ink);max-width:820px;margin:0 auto;padding:40px 44px;line-height:1.62;font-size:15px}
+ h1{font-size:1.72rem;color:var(--navy);margin:0 0 6px}
+ .meta{color:var(--muted);font-size:.95rem;margin-bottom:4px}
+ .meta b{color:var(--ink)}
+ .note{background:#f2fbfa;border-left:4px solid var(--teal);padding:11px 16px;border-radius:6px;margin:18px 0 26px;font-size:.92rem;color:#33505c;font-style:italic}
+ h3{color:var(--navy);font-size:1.16rem;margin:26px 0 6px;border-bottom:2px solid var(--line);padding-bottom:5px}
+ p{margin:8px 0}
+ ul,ol{margin:8px 0;padding-left:22px} li{margin:5px 0}
+ table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.9rem}
+ th{background:var(--navy);color:#fff;text-align:left;padding:8px 11px}
+ td{border:1px solid var(--line);padding:8px 11px;vertical-align:top}
+ tr:nth-child(even) td{background:#f7f9fc}
+ pre{background:#0e1117;color:#e6edf3;border-radius:8px;padding:13px 16px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.55;overflow-x:auto;margin:12px 0}
+ code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.88em;font-family:Consolas,monospace}
+ pre code{background:none;padding:0;font-size:inherit}
+ .skills{background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin-top:20px;font-size:.92rem}
+ hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+</style></head><body>
+
+<h1>Case Study 2 — Automated Data Analyst AI Agent (HEXA VPN)</h1>
+<p class="meta"><b>Role:</b> Data Analyst · <b>Company:</b> Hazel Mobile · <b>Product:</b> HEXA VPN app</p>
+<p class="meta"><b>Stack:</b> Python · <b>LangGraph</b> / LangChain · <b>Groq (llama-3.3-70b)</b> for SQL + <b>local Ollama (qwen2.5)</b> for every explanation · PostgreSQL (read-only) · <b>generative text-to-SQL over a 22-metric semantic layer</b> · ChromaDB semantic cache (nomic-embed-text) · Presidio · groundedness scoring (Ragas-compatible) · self-hosted SearXNG (Docker) · Streamlit · Plotly · n8n</p>
+<p class="meta"><b>Deliverables:</b> "Hexa Query" — a conversational analyst · two automated colour-coded HTML reports · a text-to-SQL engine for free-form questions · scheduling &amp; email automation · architecture + capability-roadmap diagrams</p>
+<div class="note">Figures here are illustrative / synthetic for portfolio use — they show the method, not real production data. The agent accesses the database strictly <b>READ-ONLY</b>.</div>
+<h3>The Problem</h3>
+<p>The data-quality framework from Case Study 1 worked, but running it was <b>manual</b>: run the SQL, read the results, work out why the numbers moved, research fixes, write the report. Slow, easy to skip, and regressions sat undetected between runs. Hazel needed the same rigour running <b>automatically, safely, and privately</b> against a live database.</p>
+<h3>What I Built</h3>
+<p><b>Hexa Query</b> — an agent that reproduces the whole workflow on its own, then answers free-form questions about the same telemetry. Read-only, version-locked to app_version 1.13.5.</p>
+<p><b>Full Analysis</b> runs the pipeline end to end: curated DQ checks (Statements 0–3, including the before/after reclassification) → failure taxonomy → <b>fix research</b> via self-hosted search, filtered to trusted domains and semantically cached → two green/amber/red <b>HTML reports</b> (a Comparison and an Action Plan), emailable on a schedule via n8n.</p>
+<p><b>Chat</b> answers anything. A router decides whether a question needs the <b>database</b>, a <b>web search</b>, or is just conversation, so the user never picks a mode. Every answer arrives with the <b>value</b>, the <b>exact SQL</b> behind it, and an <b>auto-selected chart</b> you can hover and click into. A pill shows which model answered — <code>cloud · llama-3.3-70b</code> or <code>local · qwen2.5</code> — and a <b>Stop</b> button cancels a slow query at the next checkpoint.</p>
+<h3>The Generative Upgrade — from fixed checks to <i>any</i> question</h3>
+<p>The first version could only answer what I'd already written SQL for. So I added a <b>LangGraph state machine</b> that writes its own queries, with the curated checks still anchoring the trusted numbers:</p>
+<pre>route → generate SQL → validate (guard + EXPLAIN) → execute (read-only) → verify → explain
+             ▲                                              │
+             └──────────── repair: feed the DB error back ───┘</pre>
+<ul><li><b>It writes the SQL, I keep the guardrails.</b> Every generated query passes the read-only <code>guard.py</code> (SELECT/WITH only, version-scoped), is <code>EXPLAIN</code>-checked <i>before</i> touching data, and runs under an injected <code>LIMIT</code> and statement timeout. On error, the DB's own message is fed back and the query is rewritten (capped retries).</li><li><b>A semantic layer makes answers <i>business</i>-correct.</b> The hard part isn't syntax, it's meaning — a model can't guess what <i>we</i> count as an "install". So 22 documented <b>metric definitions with reference SQL</b> give it the business meaning to compose from.</li><li><b>The schema documentation mattered more than prompt tuning.</b> All 33 columns <i>and their traps</i> — e.g. country columns hold <b>ISO-2 codes</b> (<code>'PK'</code>, not <code>'Pakistan'</code>), which silently returned <b>zero</b> until documented. <b>Most failures I hit were semantic, not syntactic:</b> valid SQL answering the wrong question.</li><li><b>It says when it can't answer.</b> Installs, revenue and crashes live in Firebase, not our telemetry, so an <b>unavailable-metrics registry</b> redirects instead of letting the model invent a plausible proxy.</li><li><b>It degrades instead of failing.</b> When the cloud tier hits its daily cap, the engine falls back to the local model mid-question, with a visible notice and a reduced retry budget.</li><li><b>Curated checks remain ground truth.</b> Generated results are labelled <b>"a lead to verify, not an anchor number."</b></li></ul>
+<h3>Privacy &amp; Data Governance (a first-class design goal)</h3>
+<p>Cloud writes the SQL; <b>results are always explained locally</b>. A single choke-point module controls everything outbound, on the insight that a model needs the <i>structure</i> to write a query, not the <i>data</i>:</p>
+<table><tr><th>Leaves the machine</th><th>Never leaves</th></tr><tr><td>schema (names/types only)</td><td>any data row or query result</td></tr><tr><td>my documented metric definitions</td><td>PII columns (user tokens, server IPs)</td></tr><tr><td>the question (PII-scanned by Presidio)</td><td>database credentials / the connection</td></tr><tr><td>a sanitised error <i>kind</i> on retry</td><td>host, port, user, or any literal value</td></tr></table>
+<p>The cloud-explain code path was <b>deleted, not disabled</b> — there is no flag to switch on by mistake. <code>LLM_MODE=local</code> runs the whole system with nothing leaving at all.</p>
+<p><b>I audited this boundary rather than assuming it,</b> which surfaced three real problems worth naming:</p>
+<ol><li><b>The router prompt bypassed the choke point</b> — conversation context could reach the cloud unscanned.</li><li><b>A safety check keyed off a CSS class</b> the UI layer added, so a presentation change could silently disable a privacy control. Now an engine-owned marker. <b>Security logic must never depend on presentation.</b></li><li><b>Presidio cached its own failure.</b> It needs ~800 MB to initialise; under memory pressure that failed, and the code cached the failure permanently while logging <i>"not installed"</i> — a PII scanner that switched itself off and misreported why. It now retries and reports the real reason. <b>A guard that can disable itself quietly is worse than no guard — you stop checking.</b></li></ol>
+<h3>Read-Only Safety</h3>
+<p>Three layers: a read-only session that always rolls back (<code>db.py</code>), a SQL guard allowing only <code>SELECT</code>/<code>WITH</code> and requiring the version scope (<code>guard.py</code>), and a <b>SELECT-only database user</b> — the real guarantee. <i>Ask it to "delete all rows" or query another app version: both blocked.</i></p>
+<h3>The Impact</h3>
+<ul><li><b>Hours → one click</b>, or zero on a schedule.</li><li><b>From fixed reports to open questions</b> — ad-hoc analysis and new metrics on demand, with curated checks still anchoring what matters.</li><li><b>Usable by someone who doesn't write SQL</b> — one chat box, with the SQL and a chart attached to every answer.</li><li><b>Verified, not assumed</b> — accuracy measured question by question against the live database (8 of 9 exact or within live drift; the one multi-step cohort failure documented as a model limit, not hidden).</li><li><b>No API spend</b> — a relevance scorer sends only the metrics a question needs, cutting cloud tokens ~60% and keeping usage inside the free tier. My first attempt at that optimisation <i>broke an answer</i> — the scorer selected the wrong metric, so a volume question came back with an unrelated percentage instead of a count. It's now guarded by a fixed regression set. <b>Optimising a retrieval step is an accuracy change, not just a cost change.</b></li></ul>
+<h3>Designed as a roadmap, not a one-off</h3>
+<table><tr><th>Tier</th><th>Capability</th><th>Status</th></tr><tr><td><b>1 · Deterministic</b></td><td>runs my curated SQL only; numbers fully trusted</td><td>built</td></tr><tr><td><b>2 · Generative</b></td><td>writes its own validated SQL from a semantic layer</td><td>built</td></tr><tr><td><b>3 · Agentic</b></td><td>adopt &amp; adapt a mature open-source analyst agent that plans multi-step</td><td>designed / next</td></tr></table>
+<p>Read-only enforcement, version scoping, "no PII leaves" and "curated checks stay the anchors" are <b>invariants across all three tiers</b> — capability grows, the guarantees don't move.</p>
+<h3>What's in this case study</h3>
+<p>Architecture diagram · capability-roadmap diagram · sample Comparison + Action Plan reports (HTML/PDF, synthetic) · live-app screenshots · an interactive demo (<code>agent-run-demo.html</code>) that replays a pipeline run and a chat exchange with the model pill, Stop button and drill-down chart.</p>
+<div class="skills"><b>Skills demonstrated:</b> AI-agent engineering (<b>LangGraph</b> state machines · tool-calling · intent routing) · <b>generative text-to-SQL with self-repair</b> · <b>semantic layer / metric modelling</b> · <b>privacy-by-design architecture with controlled egress</b> · <b>security auditing of an LLM egress boundary</b> · LLM integration (cloud + local, automatic failover) · vector search / semantic caching (RAG) · LLM evaluation (groundedness · faithfulness · LLM-as-judge) · <b>prompt-cost optimisation with regression testing</b> · data visualisation (Plotly · drill-down) · conversational UX for non-technical users · self-hosting (Docker / SearXNG) · concurrency, cancellation &amp; fault-tolerant pipelines · Python · PostgreSQL · read-only database safety · workflow automation (n8n) · analytical storytelling.</div>
+
+</body></html>

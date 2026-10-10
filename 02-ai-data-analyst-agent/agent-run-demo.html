@@ -1,0 +1,453 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hexa Query — Automated Data Analyst AI Agent (live demo, synthetic)</title>
+<style>
+ :root{
+   --bg:#0e1117;--panel:#161a22;--side:#12161d;--line:#262d3a;--line2:#333c4d;
+   --ink:#e8eaf0;--dim:#9aa4b5;--red:#ff4b4b;
+   --ok:#3ddc97;--okbg:#12291f;--warn:#fcd34d;--warnbg:#2a230d;
+   --cloud:#a78bfa;--local:#67c9ff;--acc:#0e9488;
+ }
+ *{box-sizing:border-box}
+ body{font-family:'Source Sans Pro','Segoe UI',Arial,sans-serif;margin:0;background:#080a0f;color:var(--ink)}
+ .wrap{max-width:1160px;margin:0 auto;padding:20px 20px 34px}
+ .frame{background:var(--bg);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+ .chrome{display:flex;align-items:center;gap:8px;background:#0a0d13;border-bottom:1px solid var(--line);padding:9px 14px}
+ .dot{width:11px;height:11px;border-radius:50%}
+ .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+ .url{flex:1;background:#141922;border:1px solid var(--line);border-radius:7px;font-size:.78rem;color:var(--dim);padding:5px 12px;margin-left:8px}
+ .badge{background:#8a6d00;color:#fff;font-size:.68rem;font-weight:700;letter-spacing:.4px;padding:4px 10px;border-radius:20px;white-space:nowrap}
+ .prog{height:3px;background:#1a1f29}
+ .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff8a8a,var(--red));transition:width .35s ease}
+ .app{display:flex;min-height:668px}
+
+ /* ---------- sidebar ---------- */
+ .side{width:262px;background:var(--side);border-right:1px solid var(--line);padding:18px 16px;flex-shrink:0}
+ .brand{display:flex;align-items:center;gap:9px;margin-bottom:3px}
+ .brand .logo{font-size:1.25rem}
+ .brand .nm{font-weight:800;font-size:1.08rem;letter-spacing:.2px}
+ .brand .sub{color:var(--dim);font-size:.74rem;margin:0 0 14px 31px}
+ .hpills{display:flex;gap:6px;margin:0 0 6px}
+ .hp{font-size:.73rem;background:#141a24;border:1px solid var(--line);border-radius:20px;padding:3px 9px;color:var(--dim)}
+ .hp b{color:var(--ink);font-weight:600}
+ .checked{color:#6b7688;font-size:.68rem;margin-bottom:15px}
+ .lbl{font-size:.68rem;font-weight:800;letter-spacing:.11em;color:#6b7688;margin:16px 0 7px}
+ .radio{display:block;font-size:.88rem;padding:7px 11px;border-radius:8px;color:var(--dim);cursor:pointer;border:1px solid transparent}
+ .radio.on{background:#1b2330;color:var(--ink);border-color:var(--line2);font-weight:600}
+ .radio:hover{color:var(--ink)}
+ .newchat{display:block;width:100%;text-align:left;background:#141a24;border:1px solid var(--line2);color:var(--ink);border-radius:8px;padding:7px 11px;font-size:.83rem;cursor:pointer;font-family:inherit;margin-bottom:7px}
+ .hist{font-size:.82rem;color:var(--dim);padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .hist.on{background:#1b2330;color:var(--ink)}
+ .hist:hover{background:#171e29}
+ .sidenote{border-top:1px solid var(--line);margin-top:16px;padding-top:12px;color:#6b7688;font-size:.75rem;line-height:1.5}
+
+ /* ---------- main ---------- */
+ .main{flex:1;padding:20px 26px;min-width:0}
+ .vhd{font-size:1.28rem;font-weight:700;margin:0 0 3px}
+ .cap{color:var(--dim);font-size:.83rem;margin-bottom:15px}
+ .routebar{background:#12181f;border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:9px 13px;font-size:.82rem;color:#a9c6c2;margin-bottom:14px}
+ .btn{background:var(--red);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit}
+ .btn:disabled{opacity:.45;cursor:default}
+ .btn.ghost{background:#161d27;color:var(--ink);border:1px solid var(--line2)}
+ .btn.stop{background:#2a1416;color:#ff8f8f;border:1px solid #5c2126}
+
+ /* chat */
+ .chatwrap{display:flex;flex-direction:column;height:560px}
+ #chatlog{flex:1;overflow-y:auto;padding-right:6px}
+ .msg{border-radius:11px;padding:12px 15px;margin:11px 0;font-size:.91rem;line-height:1.58}
+ .msg.u{background:#1b2330;border:1px solid var(--line)}
+ .msg.a{background:#11161e;border:1px solid var(--line)}
+ .who{font-size:.68rem;color:#6b7688;margin-bottom:6px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+ .pill{font-size:.66rem;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:20px;text-transform:none}
+ .pill.db{background:#0f2b26;color:#5fd0bf;border:1px solid #1d4740}
+ .pill.web{background:#101f33;color:#7db4f0;border:1px solid #1d3a5c}
+ .pill.mcloud{background:#1e1633;color:var(--cloud);border:1px solid #362a5c}
+ .pill.mlocal{background:#0d2030;color:var(--local);border:1px solid #1b3f57}
+ .bignum{font-size:1.75rem;font-weight:800;letter-spacing:-.5px;margin:2px 0 0}
+ .tiny{color:#6b7688;font-size:.76rem}
+ details{margin-top:11px}
+ summary{cursor:pointer;color:#8fa6c4;font-size:.82rem;outline:none}
+ pre{background:#0a0d13;border:1px solid var(--line);color:#cfe3ff;border-radius:8px;padding:11px 13px;font-family:Consolas,'Courier New',monospace;font-size:11.6px;line-height:1.55;overflow-x:auto;margin:8px 0 0;white-space:pre}
+ .notice{background:var(--warnbg);border:1px solid #4d4114;color:#e8d38a;border-radius:8px;padding:9px 12px;font-size:.8rem;margin-top:10px}
+ .askrow{display:flex;gap:8px;margin-top:10px}
+ .askrow input{flex:1;background:#12161d;border:1px solid var(--line2);border-radius:8px;padding:10px 13px;font-size:.9rem;font-family:inherit;color:var(--ink)}
+ .askrow input::placeholder{color:#5e687a}
+ .chips{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 2px}
+ .chip{background:#141a24;border:1px solid var(--line2);border-radius:20px;padding:5px 12px;font-size:.79rem;cursor:pointer;color:#a8b4c6}
+ .chip:hover{background:#1b2330;color:#fff}
+ .typing i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);opacity:.4;margin-right:3px;animation:td 1s infinite}
+ .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+ @keyframes td{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+ .steps{color:#7b8798;font-size:.8rem;font-family:Consolas,monospace;margin-top:4px}
+
+ /* chart */
+ .chartbox{margin-top:13px;background:#0c1017;border:1px solid var(--line);border-radius:10px;padding:12px 14px 8px}
+ .charthd{display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:#6b7688;margin-bottom:6px}
+ .bar{fill:#0e9488;transition:fill .15s}
+ .bar:hover{fill:#3ddc97;cursor:pointer}
+ .bar.sel{fill:#a78bfa}
+ .axl{fill:#8b98a9;font-size:10.5px}
+ .vall{fill:#cfd7e3;font-size:10px;font-weight:600}
+ .grid{stroke:#1c2431;stroke-width:1}
+ .drill{margin-top:9px;border-top:1px solid var(--line);padding-top:9px;font-size:.82rem;color:#b9c4d4;display:none}
+ .drill table{border-collapse:collapse;width:100%;margin-top:6px;font-size:.8rem}
+ .drill th{text-align:left;color:#6b7688;font-weight:600;padding:4px 8px;border-bottom:1px solid var(--line)}
+ .drill td{padding:4px 8px;border-bottom:1px solid #141a24}
+
+ /* full analysis */
+ .cols{display:flex;gap:22px}.colL{flex:1;min-width:0}.colR{flex:1.3;min-width:0}
+ .lead{font-size:.9rem;color:#c3cbd8}
+ .feedlbl{font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;font-size:.9rem}
+ .live{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--red);font-weight:800}
+ .live .pulse{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.1s infinite}
+ @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+ .feed{background:#080b10;border:1px solid var(--line);color:#dbe4ef;border-radius:10px;padding:13px 15px;font-family:Consolas,'Courier New',monospace;font-size:12.2px;line-height:1.6;height:404px;overflow-y:auto;white-space:pre-wrap}
+ .feed .l{display:block}
+ .feed .stage{color:#7dd3fc;font-weight:700;margin-top:6px}
+ .feed .ok{color:#86efac}.feed .warn{color:#fcd34d}.feed .dim{color:#7b8798}
+ .feed .cur{display:inline-block;width:8px;height:14px;background:#dbe4ef;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+ @keyframes blink{50%{opacity:0}}
+ .succ{background:var(--okbg);border:1px solid #1d4a35;color:#9beec4;border-radius:8px;padding:11px 14px;margin-top:14px;font-size:.87rem;opacity:0;transform:translateY(6px);transition:.4s}
+ .succ.show{opacity:1;transform:none}
+ .dl{display:inline-block;background:#141a24;border:1px solid var(--line2);border-radius:7px;padding:6px 11px;margin:8px 8px 0 0;font-size:.8rem;color:#cfd7e3}
+ .cardnote{background:#12181f;border:1px solid var(--line);border-left:3px solid var(--red);border-radius:0 8px 8px 0;padding:10px 14px;margin:13px 0 0;font-size:.83rem;color:#b9c4d4}
+ .btnrow{display:flex;gap:8px;margin-top:12px;align-items:center}
+ .foot{text-align:center;color:#5b6472;font-size:.76rem;padding:11px;border-top:1px solid var(--line)}
+</style></head><body>
+<div class="wrap">
+ <div class="frame">
+   <div class="chrome">
+     <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+     <span class="url">localhost:8510 · Hexa Query — HEXA VPN read-only analyst</span>
+     <span class="badge">SYNTHETIC DATA · DEMO</span>
+   </div>
+   <div class="prog"><i id="bar"></i></div>
+
+   <div class="app">
+     <!-- ================= SIDEBAR ================= -->
+     <div class="side">
+       <div class="brand"><span class="logo">&#128737;</span><span class="nm">Hexa Query</span></div>
+       <div class="sub">HEXA VPN &middot; read-only analyst</div>
+
+       <div class="hpills">
+         <span class="hp" id="h-db">&#128994; <b>DB</b></span>
+         <span class="hp" id="h-llm">&#128994; <b>LLM</b></span>
+       </div>
+       <div class="checked">checked once at startup &middot; 1.13.5 &middot; read-only &middot; cloud</div>
+
+       <div class="lbl">VIEW</div>
+       <div class="radio on" id="v-chat" onclick="showView('chat')">&#128172; Chat</div>
+       <div class="radio" id="v-run" onclick="showView('run')">&#128269; Full Analysis</div>
+
+       <div class="lbl">HISTORY</div>
+       <button class="newchat" onclick="newChat()">+ New chat</button>
+       <div class="hist on" id="hist0">Success rate by country</div>
+       <div class="hist">Users lost &mdash; last 30 days</div>
+       <div class="hist">Worst protocol this week</div>
+
+       <div class="sidenote">
+         &#128274; Read-only session &middot; version-locked to <b>1.13.5</b>.<br>
+         Results are <b>always explained locally</b> &mdash; no data row reaches a cloud API.
+       </div>
+     </div>
+
+     <!-- ================= MAIN ================= -->
+     <div class="main">
+
+       <!-- ---------- CHAT VIEW ---------- -->
+       <div id="panel-chat">
+         <div class="vhd">&#128172; Chat</div>
+         <div class="cap">Ask anything &mdash; it routes itself to the database, the web, or plain conversation.</div>
+         <div class="routebar">Routes per message &middot; <b>curated checks</b> for in-house metrics, <b>generated SQL</b> for everything else</div>
+
+         <div class="chatwrap">
+           <div id="chatlog"></div>
+           <div class="chips" id="chips"></div>
+           <div class="askrow">
+             <input id="askin" type="text" placeholder="e.g. what was the success rate per country last month?" onkeydown="if(event.key==='Enter')sendAsk()">
+             <button class="btn" id="askbtn" onclick="sendAsk()">Ask</button>
+             <button class="btn stop" id="stopbtn" style="display:none" onclick="stopAsk()">&#9209; Stop</button>
+           </div>
+         </div>
+       </div>
+
+       <!-- ---------- FULL ANALYSIS VIEW ---------- -->
+       <div id="panel-run" style="display:none">
+         <div class="vhd">&#128269; Full Analysis</div>
+         <div class="cap">Read-only &middot; locked to app_version 1.13.5 &middot; curated SQL anchors every number</div>
+         <div class="cols">
+           <div class="colL">
+             <p class="lead">Runs <b>DQ statements &rarr; failure taxonomy &rarr; researched fixes</b> and saves <b>two</b> colour-coded reports (Comparison + Action Plan) to <code>reports/</code>.</p>
+             <div class="btnrow">
+               <button class="btn" id="run" onclick="start()">&#9654; Run full analysis</button>
+               <button class="btn stop" id="runstop" style="display:none" onclick="stopRun()">&#9209; Stop</button>
+               <button class="btn ghost" id="replay" onclick="start()" style="display:none">&#8635; Replay</button>
+             </div>
+
+             <div class="succ" id="succ">&#10004; <b>Two reports created in <code>reports/</code>:</b><br>
+               <span class="dl">&#8681; Comparison_Report_1.13.5.ipynb</span>
+               <span class="dl">&#8681; Action_Plan_1.13.5.ipynb</span>
+             </div>
+
+             <div class="cardnote">
+               <b>What you're watching.</b> The agent runs the analyst's <b>own curated SQL</b> (it never invents the anchor queries),
+               adds <b>generative diagnostics</b> clearly labelled as leads, researches a fix per failure type through a
+               <b>self-hosted</b> search, <b>fact-checks</b> each one, and renders two reports. Numbers are synthetic.
+             </div>
+           </div>
+           <div class="colR">
+             <div class="feedlbl">Live agent activity
+               <span class="live" id="livetag" style="display:none"><span class="pulse"></span>LIVE</span>
+             </div>
+             <div class="feed" id="feed"><span class="dim">Idle &mdash; press &ldquo;Run full analysis&rdquo; to start.</span></div>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+   <div class="foot">Illustrative UI mockup &middot; synthetic values &middot; no production data shown &middot; database accessed read-only</div>
+ </div>
+</div>
+
+<script>
+/* =======================================================================
+   Everything below is synthetic. No production data, no live connection.
+   ======================================================================= */
+
+/* ---------------- chart builder (hover + click drill-down) -------------- */
+function chartSVG(id, rows, unit){
+  const W=470,H=168,PL=34,PR=8,PT=10,PB=26;
+  // percentages never exceed 100, so don't invent a 108% axis
+  let max=Math.max(...rows.map(r=>r[1]))*1.12;
+  if(unit==='%') max=Math.min(100,Math.max(max,Math.max(...rows.map(r=>r[1]))+4));
+  const bw=(W-PL-PR)/rows.length, iw=Math.min(46,bw-14);
+  let g='';
+  for(let k=0;k<=3;k++){
+    const y=PT+(H-PT-PB)*k/3;
+    g+=`<line class="grid" x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}"/>`
+      +`<text class="axl" x="${PL-6}" y="${y+3}" text-anchor="end">${Math.round(max*(1-k/3))}</text>`;
+  }
+  rows.forEach((r,i)=>{
+    const h=(H-PT-PB)*(r[1]/max), x=PL+bw*i+(bw-iw)/2, y=H-PB-h;
+    g+=`<rect class="bar" data-c="${id}" data-i="${i}" x="${x}" y="${y}" width="${iw}" height="${h}" rx="3">`
+      +`<title>${r[0]}: ${r[1]}${unit}</title></rect>`
+      +`<text class="vall" x="${x+iw/2}" y="${y-4}" text-anchor="middle">${r[1]}</text>`
+      +`<text class="axl" x="${x+iw/2}" y="${H-9}" text-anchor="middle">${r[0]}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${g}</svg>`;
+}
+
+function attachDrill(box, rows, drillData){
+  box.querySelectorAll('.bar').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const i=+b.dataset.i;
+      box.querySelectorAll('.bar').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      const d=box.querySelector('.drill'), key=rows[i][0];
+      const detail=drillData[key]||[['no breakdown in this demo','—']];
+      d.style.display='block';
+      d.innerHTML=`<b>${key}</b> &mdash; drilled down <span class="tiny">(click another bar to change)</span>`
+        +'<table><tr><th>segment</th><th>success&nbsp;%</th></tr>'
+        +detail.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')+'</table>';
+    });
+  });
+}
+
+/* ---------------- canned Q&A (synthetic) ------------------------------- */
+const COUNTRY=[['PK',96.1],['IN',95.4],['ID',94.8],['BD',93.2],['NG',91.7],['EG',90.4]];
+const COUNTRY_DRILL={
+  'PK':[['WireGuard-udp','97.4'],['OpenVPN-tcp','95.2'],['IKEv2','93.8']],
+  'IN':[['WireGuard-udp','96.8'],['OpenVPN-tcp','94.1'],['IKEv2','92.9']],
+  'ID':[['WireGuard-udp','96.0'],['OpenVPN-tcp','93.6'],['IKEv2','91.7']],
+  'BD':[['WireGuard-udp','95.1'],['OpenVPN-tcp','92.4'],['IKEv2','89.8']],
+  'NG':[['WireGuard-udp','93.7'],['OpenVPN-tcp','90.2'],['IKEv2','87.4']],
+  'EG':[['WireGuard-udp','92.6'],['OpenVPN-tcp','89.1'],['IKEv2','85.9']],
+};
+const FAILS=[['handshake timeout',40.7],['read timeout',26.4],['TLS reject',15.4],['DNS fail',10.1],['other',7.4]];
+
+const QA=[
+ { q:"What was the success rate per country in the last 30 days?",
+   route:"database", model:["mcloud","&#9729; cloud &middot; llama-3.3-70b"],
+   steps:["route: database","selecting relevant metrics (3 of 22)","writing SQL (schema-only egress)","running it read-only…","building the chart"],
+   value:"96.1%", vlabel:"best performing &mdash; PK &middot; 6 countries returned",
+   sql:"SELECT user_country,\n       round(100.0 * count(*) FILTER (WHERE lower(outcome::text)='success')\n             / NULLIF(count(*),0), 2) AS success_pct\nFROM connection_events\nWHERE app_version = '1.13.5'\n  AND occurred_at >= (SELECT max(occurred_at) - interval '30 days'\n                      FROM connection_events WHERE app_version='1.13.5')\nGROUP BY user_country\nORDER BY success_pct DESC\nLIMIT 1000",
+   prose:"Success rate ranges from 96.1% (PK) down to 90.4% (EG). The spread tracks protocol mix rather than geography &mdash; click any bar to break it down by protocol. Note countries are stored as ISO-2 codes, so this groups on 'PK', not 'Pakistan'.",
+   chart:{rows:COUNTRY,unit:"%",title:"success % by country &middot; hover for values, click to drill down",drill:COUNTRY_DRILL} },
+
+ { q:"Which failure type should we fix first?",
+   route:"database", model:["mlocal","&#128187; local &middot; qwen2.5"],
+   steps:["route: database","cloud model rate-limited — switching to local","writing SQL locally (slower)","running it read-only…"],
+   value:"40.7%", vlabel:"handshake timeout &mdash; largest share of failing legs",
+   sql:"WITH legs AS (\n  SELECT failure_kind, count(*) AS n\n  FROM connection_events\n  WHERE app_version = '1.13.5'\n    AND lower(outcome::text) = 'failure'\n  GROUP BY failure_kind\n)\nSELECT failure_kind,\n       round(100.0 * n / sum(n) OVER (), 1) AS pct_of_failures\nFROM legs\nORDER BY pct_of_failures DESC\nLIMIT 1000",
+   notice:"Answered with the <b>local</b> model &mdash; the cloud model was rate-limited (free tier is capped per day), so the SQL was written locally. Slower, and weaker on complex queries.",
+   prose:"Handshake timeout is the biggest bucket at 40.7% of failing legs, ahead of read timeout (26.4%) and TLS reject (15.4%). It also clusters on one protocol and region, so it clears the most failures for the least work &mdash; which is why the Action Plan ranks it first.",
+   chart:{rows:FAILS,unit:"%",title:"share of failing legs by cause &middot; hover for values",drill:{}} },
+
+ { q:"What is DPI blocking, and why does it break VPN handshakes?",
+   route:"web", model:["mlocal","&#128187; local &middot; qwen2.5"],
+   steps:["route: web","PII scan on the question — clean","searching the web (self-hosted SearXNG)…","summarising 3 trusted sources"],
+   prose:"Deep Packet Inspection reads the contents of a packet rather than just its headers, so it can recognise the distinctive opening bytes of a VPN handshake and drop or reset that connection before a tunnel is ever established. That is why blocked users usually see a timeout at handshake rather than a clean refusal. Common mitigations are obfuscation layers that make the handshake look like ordinary TLS traffic, and moving to port 443. Sources are checked for support before any fix is written into a report.",
+   sources:true },
+];
+
+/* ---------------- chat engine ------------------------------------------ */
+let asking=false, stopFlag=false, demoStarted=false, tHandles=[];
+const log=document.getElementById('chatlog');
+const askbtn=document.getElementById('askbtn'), stopbtn=document.getElementById('stopbtn');
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function wait(ms){return new Promise(r=>tHandles.push(setTimeout(r,ms)));}
+function findQA(q){const k=q.trim().toLowerCase();return QA.find(x=>x.q.toLowerCase()===k);}
+
+function stopAsk(){
+  stopFlag=true; tHandles.forEach(clearTimeout); tHandles=[];
+  const pend=log.querySelector('.pending');
+  if(pend){ pend.querySelector('.body').innerHTML='<span class="tiny">Stopped at the next checkpoint &mdash; nothing was left running.</span>';
+            pend.classList.remove('pending'); }
+  asking=false; stopbtn.style.display='none'; askbtn.style.display='';
+}
+
+async function askQuestion(q){
+  if(asking||!q.trim()) return;
+  asking=true; stopFlag=false;
+  askbtn.style.display='none'; stopbtn.style.display='';
+
+  const u=document.createElement('div'); u.className='msg u';
+  u.innerHTML='<div class="who">You</div>'+esc(q); log.appendChild(u);
+
+  const hit=findQA(q);
+  const a=document.createElement('div'); a.className='msg a pending';
+  const rp = hit ? `<span class="pill ${hit.route==='web'?'web':'db'}">${hit.route}</span>
+                    <span class="pill ${hit.model[0]}">${hit.model[1]}</span>` : '';
+  a.innerHTML=`<div class="who">Hexa Query ${rp}</div><div class="body"><span class="typing"><i></i><i></i><i></i></span><div class="steps" id="stp"></div></div>`;
+  log.appendChild(a); log.scrollTop=log.scrollHeight;
+
+  const steps=hit?hit.steps:["route: chat"];
+  const stp=a.querySelector('.steps');
+  for(const s of steps){ await wait(620); if(stopFlag) return; stp.textContent='  '+s; log.scrollTop=log.scrollHeight; }
+  await wait(520); if(stopFlag) return;
+
+  const body=a.querySelector('.body');
+  body.innerHTML='';
+  a.classList.remove('pending');
+
+  if(!hit){
+    body.innerHTML='<span class="tiny">Outside this demo’s canned answers. In the real agent this routes itself, '
+      +'writes read-only SQL scoped to app_version 1.13.5, and the <b>local</b> model explains the result.</span>';
+    asking=false; stopbtn.style.display='none'; askbtn.style.display=''; return;
+  }
+
+  let html='';
+  if(hit.value) html+=`<div class="bignum">${hit.value}</div><div class="tiny">${hit.vlabel}</div>`;
+  if(hit.notice) html+=`<div class="notice">&#8505; ${hit.notice}</div>`;
+  html+=`<p style="margin:10px 0 0">${hit.prose}</p>`;
+  if(hit.sql) html+=`<details><summary>SQL used</summary><pre>${esc(hit.sql)}</pre></details>`;
+  if(hit.sources) html+=`<details><summary>3 sources &middot; checked for support</summary>`
+    +`<pre>ietf.org        &mdash; supported\ncloudflare.com  &mdash; supported\nwireguard.com   &mdash; supported</pre></details>`;
+  if(hit.chart) html+=`<div class="chartbox"><div class="charthd"><span>${hit.chart.title}</span></div>`
+    +chartSVG('c'+Math.random().toString(36).slice(2),hit.chart.rows,hit.chart.unit)
+    +`<div class="drill"></div></div>`;
+  body.innerHTML=html;
+  if(hit.chart) attachDrill(body,hit.chart.rows,hit.chart.drill);
+
+  log.scrollTop=log.scrollHeight;
+  asking=false; stopbtn.style.display='none'; askbtn.style.display='';
+}
+
+function sendAsk(){const el=document.getElementById('askin');const q=el.value;el.value='';askQuestion(q);}
+function newChat(){ log.innerHTML=''; document.querySelectorAll('.hist').forEach(h=>h.classList.remove('on')); }
+document.getElementById('chips').innerHTML =
+  QA.map(p=>`<span class="chip" onclick="askQuestion(this.dataset.q)" data-q="${esc(p.q).replace(/"/g,'&quot;')}">${esc(p.q)}</span>`).join('');
+
+/* ---------------- view switch ------------------------------------------ */
+function showView(v){
+  const chat=v==='chat';
+  document.getElementById('v-chat').classList.toggle('on',chat);
+  document.getElementById('v-run').classList.toggle('on',!chat);
+  document.getElementById('panel-chat').style.display=chat?'':'none';
+  document.getElementById('panel-run').style.display=chat?'none':'';
+  if(!chat && !demoStarted){ demoStarted=true; setTimeout(start,500); }
+}
+
+/* ---------------- Full Analysis scripted run (synthetic) --------------- */
+const SCRIPT=[
+ [200,'dim' ,'$ streamlit run app.py  —  Hexa Query'],
+ [480,''    ,'Engine ready  (READ-ONLY · locked to app_version 1.13.5)'],
+ [400,'ok'  ,'  ✓ DB session opened  (read-only · auto-rollback)'],
+ [330,'ok'  ,'  ✓ Ollama ready  (qwen2.5 · keep_alive 10m)'],
+ [330,'ok'  ,'  ✓ SearXNG reachable  (self-hosted · Docker)'],
+ [560,'stage','STAGE 1/4 — DATA QUALITY  (curated statements 0/1/2/3)'],
+ [460,'dim' ,'  loading canonical dq_checks.sql  →  15 named checks'],
+ [460,'ok'  ,'  → self-check: re-derived key totals a 2nd way … 6/6 PASS'],
+ [420,''    ,'  Statement 0 — impact (before vs after reclassification)'],
+ [480,''    ,'      Success %:  before 92.4   after 68.1   ( −24.3 pts )'],
+ [400,''    ,'      Unique users with a clean success:  −41,820'],
+ [400,''    ,'  Statement 3 — per-check contribution to the drop:'],
+ [370,'dim' ,'      B2  Inactivity churn 7d …… 14.6 pts'],
+ [340,'dim' ,'      B7  One-and-done ………………  6.8 pts'],
+ [600,'stage','STAGE 2/4 — FAILURE ANALYSIS  (taxonomy + protocol/server)'],
+ [460,'dim' ,'  failure_reason is degenerate → mining real cause from outbounds'],
+ [480,''    ,'      • Handshake / probe timeout …… 3,910 legs  (40.7%)'],
+ [400,''    ,'      • Read timeout mid-session …… 2,540 legs  (26.4%)'],
+ [400,'dim' ,'      worst protocol: WireGuard-udp   worst region: eu-west'],
+ [600,'stage','STAGE 3/4 — SOLUTIONS  (research a fix per failure type)'],
+ [440,'dim' ,'  egress guard: allow-list + Presidio scan on outbound text'],
+ [400,'ok'  ,'  ✓ only generic keywords leave the machine (no telemetry / PII)'],
+ [480,''    ,'  researching “Handshake / probe timeout fix” …'],
+ [480,'ok'  ,'      ✓ grounded against 3 sources  ·  faithfulness 0.91'],
+ [440,'ok'  ,'      ✓ cache hit (ChromaDB, semantic) — no re-search needed'],
+ [480,'warn','      ⚠ low support (0.42) → flagged UNVERIFIED in report'],
+ [600,'stage','STAGE 4/4 — GENERATIVE DIAGNOSTICS  (leads to verify)'],
+ [460,'dim' ,'  text-to-SQL · beyond the curated set · labelled as leads'],
+ [460,''    ,'      per-country success · duration percentiles · odd exit servers'],
+ [420,'ok'  ,'      ✓ 4/4 generated queries passed guard + EXPLAIN'],
+ [600,'stage','ASSEMBLING REPORTS'],
+ [480,'ok'  ,'  ✓ Report A — Comparison (raw vs true · before/after DQ)'],
+ [460,'ok'  ,'  ✓ Report B — Action Plan (fixes + heatmaps + leads)'],
+ [480,''    ,'DONE → 2 reports saved to reports/  ·  DB accessed read-only ✓'],
+];
+let rTimers=[];
+const feed=document.getElementById('feed'), bar=document.getElementById('bar');
+const runBtn=document.getElementById('run'), replayBtn=document.getElementById('replay');
+const runStop=document.getElementById('runstop');
+const succ=document.getElementById('succ'), livetag=document.getElementById('livetag');
+
+function stopRun(){
+  rTimers.forEach(clearTimeout); rTimers=[];
+  const c=feed.querySelector('.cur'); if(c) c.remove();
+  const l=document.createElement('span'); l.className='l warn';
+  l.textContent='■ stopped by user — partial results kept, nothing left running';
+  feed.appendChild(l); feed.scrollTop=feed.scrollHeight;
+  livetag.style.display='none'; runStop.style.display='none'; replayBtn.style.display='inline-block';
+}
+
+function start(){
+  rTimers.forEach(clearTimeout); rTimers=[];
+  feed.innerHTML=''; bar.style.width='0%';
+  succ.classList.remove('show');
+  runBtn.style.display='none'; replayBtn.style.display='none';
+  runStop.style.display='inline-block';
+  livetag.style.display='inline-flex';
+  const cursor=document.createElement('span'); cursor.className='cur'; feed.appendChild(cursor);
+  let t=0;
+  SCRIPT.forEach((row,i)=>{
+    t+=row[0];
+    rTimers.push(setTimeout(()=>{
+      const line=document.createElement('span');
+      line.className='l '+(row[1]||''); line.textContent=row[2];
+      feed.insertBefore(line,cursor);
+      feed.scrollTop=feed.scrollHeight;
+      bar.style.width=Math.round(100*(i+1)/SCRIPT.length)+'%';
+    },t));
+  });
+  rTimers.push(setTimeout(()=>{
+    cursor.remove(); succ.classList.add('show');
+    livetag.style.display='none'; runStop.style.display='none';
+    replayBtn.style.display='inline-block';
+  },t+400));
+}
+
+/* auto-play the chat first so it feels like a recording */
+window.addEventListener('load',()=>{ setTimeout(()=>askQuestion(QA[0].q),800); });
+</script>
+</body></html>
