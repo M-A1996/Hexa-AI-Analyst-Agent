@@ -6,6 +6,8 @@
 
 > *Figures here are illustrative / synthetic for portfolio use — they show the method, not real production data. The agent accesses the database strictly **READ-ONLY**.*
 
+> **Model update:** this case study describes the agent as originally built, when Groq still served **Llama 3.3 70B** and **Qwen 2.5** ran locally. Groq has since retired Llama 3.3 70B, so the cloud model is now **gpt-oss-120b**, and the local model was upgraded to **Qwen3 Coder 30B**. Swapping models was a configuration change, re-validated against the same regression set.
+
 ---
 
 ### The Problem
