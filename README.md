@@ -20,9 +20,13 @@ A suite of SQL checks that catches "fake" successes in event telemetry (implausi
 | SQL highlights | [SQL file](<01-data-quality-framework/SQL Highlights/SQL Highlights — DQ Framework (HEXA VPN).sql>) · [PDF](<01-data-quality-framework/SQL Highlights/SQL Highlights — DQ Framework (HEXA VPN).pdf>) |
 | Reports (synthetic) | [DQ Checks Explained](<01-data-quality-framework/Sanitized Report/DQ Checks Explained.pdf>) · [DQ Impact Report](<01-data-quality-framework/Sanitized Report/DQ Impact Report.pdf>) |
 | Architecture | [Diagram](<01-data-quality-framework/dq-framework-architecture.png>) |
-| Demo | [Screen recording](<01-data-quality-framework/demo-dq-checks.mp4>) · [Interactive demo (download & open in a browser)](<01-data-quality-framework/DQ Impact — Interactive Demo (app_version 1.13.5, synthetic).html>) |
+| Demo | [Preview (GIF)](<01-data-quality-framework/demo-dq-checks.gif>) · [Full recording (MP4, download)](<01-data-quality-framework/demo-dq-checks.mp4>) · [Interactive demo (download & open in a browser)](<01-data-quality-framework/DQ Impact — Interactive Demo (app_version 1.13.5, synthetic).html>) |
 
 ![Data-quality framework architecture](<01-data-quality-framework/dq-framework-architecture.png>)
+
+**Demo (2× speed preview — [download the full MP4](<01-data-quality-framework/demo-dq-checks.mp4>)):**
+
+![Data-quality checks demo](<01-data-quality-framework/demo-dq-checks.gif>)
 
 ---
 
@@ -38,7 +42,9 @@ A **LangGraph** agent that reproduces the full data-quality workflow automatical
 - **Evaluation:** answers checked question by question against the database, plus a fixed regression set
 - **Automation:** scheduled, colour-coded HTML reports (Comparison + Action Plan)
 
-**Stack:** Python · LangGraph / LangChain · Groq + local Ollama · PostgreSQL (read-only) · ChromaDB · Presidio · Streamlit · Plotly · n8n · Docker
+**Stack:** Python · LangGraph / LangChain · Groq (cloud, SQL generation) + local Ollama (explanations) · PostgreSQL (read-only) · ChromaDB · Presidio · Streamlit · Plotly · n8n · Docker
+
+> **Model history:** the agent was originally built when Groq still served **Llama 3.3 70B**, with **Qwen 2.5** running locally via Ollama — so the case study, screenshots and demo show those models. Groq has since retired Llama 3.3 70B, so the cloud model was switched to **gpt-oss-120b**, and the local model was upgraded to **Qwen3 Coder 30B**. The architecture is model-agnostic: swapping models is a config change, re-checked against the same regression set.
 
 | What | File |
 |---|---|
@@ -46,9 +52,11 @@ A **LangGraph** agent that reproduces the full data-quality workflow automatical
 | Architecture | [Diagram (PNG)](<02-ai-data-analyst-agent/ai-agent-architecture.png>) · [PDF](<02-ai-data-analyst-agent/ai-agent-architecture.pdf>) |
 | App screenshots | [Chat with chart](<02-ai-data-analyst-agent/App Screenshots/App — Chat with chart (illustrative).png>) · [Full analysis running](<02-ai-data-analyst-agent/App Screenshots/App — Full Analysis running (illustrative).png>) |
 | Generated reports (synthetic) | [Comparison Report](<02-ai-data-analyst-agent/Sanitized Report/Comparison Report.pdf>) · [Action Plan](<02-ai-data-analyst-agent/Sanitized Report/Action Plan.pdf>) |
-| Demo | [Screen recording](<02-ai-data-analyst-agent/demo-ai-agent.mp4>) · [Interactive run replay (download & open in a browser)](<02-ai-data-analyst-agent/agent-run-demo.html>) |
+| Demo | [Preview (GIF)](<02-ai-data-analyst-agent/demo-ai-agent.gif>) · [Full recording (MP4, download)](<02-ai-data-analyst-agent/demo-ai-agent.mp4>) · [Interactive run replay (download & open in a browser)](<02-ai-data-analyst-agent/agent-run-demo.html>) |
 
-![Agent chat with chart (illustrative)](<02-ai-data-analyst-agent/App Screenshots/App — Chat with chart (illustrative).png>)
+**Demo (2× speed preview — [download the full MP4](<02-ai-data-analyst-agent/demo-ai-agent.mp4>)):**
+
+![AI data analyst agent demo](<02-ai-data-analyst-agent/demo-ai-agent.gif>)
 
 ---
 
